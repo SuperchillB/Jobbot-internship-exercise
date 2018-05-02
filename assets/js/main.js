@@ -7,230 +7,179 @@
 // 3. Under comments show button "load more" to display last 10 comments.
 
 
-// -----------------------------------
-// GLOBALS & CLASSES
-// -----------------------------------
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // -----------------------------------
+    // GLOBALS & CLASSES
+    // -----------------------------------
 
-// DOM variables
-let postsContainer = document.querySelector('.posts-container'),
-    commentsContainer = document.getElementsByClassName('post-comment-container'),
-    article = document.getElementsByTagName('article');
-    postBtn = document.getElementsByClassName('post-btn');
+    // DOM variables
+    let postsContainer = document.querySelector('.posts-container'),
+        commentsContainer = document.getElementsByClassName('post-comment-container'),
+        article = document.getElementsByTagName('article');
+        postBtn = document.getElementsByClassName('post-btn');
 
-// AJAX-related variables
-let XHR_posts = new XMLHttpRequest(),
-    XHR_comments = new XMLHttpRequest(),
-    postsURL = "https://jsonplaceholder.typicode.com/posts",
-    commentsURL = "https://jsonplaceholder.typicode.com/comments"
+    // AJAX-related variables
+    let XHR_posts = new XMLHttpRequest(),
+        XHR_comments = new XMLHttpRequest(),
+        postsURL = "https://jsonplaceholder.typicode.com/posts",
+        commentsURL = "https://jsonplaceholder.typicode.com/comments"
 
-// Arrays used to store posts and comments
-let randomPosts = [], // array collecting 10 random posts
-    temp_comments = [], // array collecting 50 comments (5 for each of the 10 posts)
-    randomComments = []; // array collecting 3 random comments for each post
-
-// create class 'Posts' from which we will instantiate posts with their respective comments
-class Posts {
-    // constructor(title, content, {name = '', email = '', body = ''}) {
-    constructor(title, content) {
-        this.title = title;
-        this.content = content;
-        // this.comments = {name, email, body};
-    }
-    // method to append a block of pre-written HTML code into the DOM in the form of post cards
-    appendPost(){
-        return ("<article>"+
-                    "<h2 class='post-title'>"+ this.title +"</h2>"+
-                    "<div class='post-content'>"+ this.content +"</div>"+
-                    "<div class='post-comment-container'><i class='fas fa-comments'></i> Comments (<span></span>)</div>"+
-                    "<div class='post-btn'><div>Load more</div></div>"+
-                "</article>");
-    }
-    // // method to append a block of pre-written HTML code into the DOM in the form of comments
-    // appendComments(){
-    //     return ("<div class='post-comment-name'><a href='mailto:"+ this.comments.email +"'>"+ this.comments.name +"</a></div>"+
-    //             "<div class='post-comment-body'>"+ this.comments.body +"</div>"+
-    //             "<hr>");
-    // }
-}
-
-// create class 'Comments' from which we will instantiate comments
-class Comments {
-    constructor(name, email, body, isShown) {
-        this.name = name;
-        this.email = email;
-        this.body = body;
-        this.isShown = false;
-    }
-    // method to append a block of pre-written HTML code into the DOM (shown comments)
-    appendShownComment(){
-        return ("<div class='post-comment-group shown'>"+
-                    "<div class='post-comment-name'><a href='mailto:"+ this.email +"'>"+ this.name +"</a></div>"+
-                    "<div class='post-comment-body'>"+ this.body +"</div>"+
-                "<hr>"+
-                "</div>");
-    }
-    // method to append a block of pre-written HTML code into the DOM (hidden comments)
-    appendHiddenComment(){
-        return ("<div class='post-comment-group hidden' style='display:none;'>"+ // style='display:none'
-                    "<div class='post-comment-name'><a href='mailto:"+ this.email +"'>"+ this.name +"</a></div>"+
-                    "<div class='post-comment-body'>"+ this.body +"</div>"+
-                "<hr>"+
-                "</div>");
-    }
-}
-
-
-
-// -----------------------------------
-// AJAX - POSTS
-// -----------------------------------
-
-XHR_posts.open("GET", postsURL);
-XHR_posts.responseType = 'json';
-XHR_posts.send();
-XHR_posts.onload = function() {
-    let posts = XHR_posts.response;
-    showPosts(posts);
-}
-
-function showPosts (objects) {
-// CREATE FUNCTION RIGHT BELOW     
-	// get 10 random posts from given API
-	// for(let i = 0; i < 10; i++){ // for loop to avoid duplicates
-	// 	let randomObj = giveRandomItem(100, objects); // save random post in randomObj variable
-	// 	if (randomPosts.indexOf(randomObj) == -1) { // if given post isn't in the array
-	// 		randomPosts.push(randomObj);
-	// 	} else { // if given post is a duplicate of a post already saved in the array
-	// 		i--;
-	// 	}
-	// }
-    getRandomElements(10, objects, randomPosts);
-// END OF FUNCTION ABOVE    
-    console.log("The 10 randomly selected posts are ", randomPosts);
-
-    // create empty variable that will contain a string of HTML code for a single post
-    let postCard = '';
-    // append each of the 10 randomly selected posts to the DOM
-    for(let i = 0; i < randomPosts.length; i++){
-        // instantiate from Posts class
-        // postCard = new Posts(randomPosts[i].title, randomPosts[i].body, {name: '', email: '', body: ''}).appendPost();
-        postCard = new Posts(randomPosts[i].title, randomPosts[i].body).appendPost();
-        // append to HTML
-        postsContainer.innerHTML += postCard;
-    }
-
-    // create a counter variable to generate an id for each post
-    let postIdCounter = 1;
-    // iterate through each created article
-    for(let i = 0; i < document.getElementsByTagName('article').length; i++){
-        // add corresponding id to postCard
-        document.getElementsByTagName('article')[i].setAttribute("id", "post-" + postIdCounter);
-        // // increment id counter
-        postIdCounter++;
-    }
+    // Arrays used to store posts and comments
+    let randomPosts = [], // array collecting 10 random posts
+        temp_comments = [], // array collecting 50 comments (5 for each of the 10 posts)
+        randomComments = []; // array collecting 3 random comments for each post
 
 
     // -----------------------------------
-    // AJAX - COMMENTS
+    // AJAX (POSTS AND COMMENTS)
     // -----------------------------------
 
-    XHR_comments.open("GET", commentsURL);
-    XHR_comments.responseType = 'json';
-    XHR_comments.send();
-    XHR_comments.onload = function() {
-        let comments = XHR_comments.response;
-        showComments(comments);
-    }
+    // load posts from JSON via a Promise
+    let promisePosts = new Promise(function(resolve, reject) {
+        // get data from posts JSON
+        ajax(postsURL, function(posts){
+            resolve(posts); // success
+        }) 
+    });
 
-    function showComments (objects) {
-        // iterate through each of the 10 randomly selected posts
-        for(let i = 0; i < randomPosts.length; i++){
-            // for each of these posts, compare their id with that of each of the 500 comments
-            for(let j = 0; j < objects.length; j++){
-                // if they match
-                if (objects[j].postId == randomPosts[i].id) {
-                    // push the comment to a temporary array
-                    temp_comments.push(objects[j]);
-                }
-            }
-            // display on page number of comments for each post after 'Comments'
-            document.getElementsByTagName('span')[i].textContent = temp_comments.length;
-            console.log("The 5 comments for post # " + (i+1) + " are ", temp_comments);          
-            // create an empty array that will store 3 random comments related to each of the 10 posts
-            let temp_shownComments = [];
-// CREATE FUNCTION RIGHT BELOW  
-            // get 3 random comments from given API
-            // for(let k = 0; k < 3; k++){ // for loop to avoid duplicates
-            //     let randomObj = giveRandomItem(5, temp_comments); // save random comment in randomObj variable
-            //     if (temp_shownComments.indexOf(randomObj) == -1) { // if given comment isn't in the array
-            //         temp_shownComments.push(randomObj);
-            //     } else { // if given comment is a duplicate of a comment already saved in the array
-            //         k--;
-            //     }
-            // }
-            getRandomElements(3, temp_comments, temp_shownComments);
-// END OF FUNCTION ABOVE
-            console.log("The 3 shown comments for post # " + (i+1) + " are ", temp_shownComments);
-            
-            // iterate through each of the 3 shown comments
-            for(let l = 0; l < temp_shownComments.length; l++){
-                // instantiate from Comments class
-                shownComment = new Comments(temp_shownComments[l].name, temp_shownComments[l].email, temp_shownComments[l].body, true).appendShownComment();
-                // append to HTML
-                commentsContainer[i].innerHTML += shownComment;
-            }
+    // load comments from JSON via a Promise
+    let promiseComments = new Promise(function(resolve, reject) {
+        // get data from comments JSON
+        ajax(commentsURL, function(comments){
+            resolve(comments); // success
+        }) 
+    });
 
-            // iterate through each of the 5 related comments
-            for(let m = 0; m < temp_comments.length; m++){
-                if (temp_shownComments.indexOf(temp_comments[m]) == -1) {
-                    console.log(temp_comments[m]);
-                    // instantiate from Comments class
-                    hiddenComment = new Comments(temp_comments[m].name, temp_comments[m].email, temp_comments[m].body, false).appendHiddenComment();
-                    // append to HTML
-                    commentsContainer[i].innerHTML += hiddenComment;
-                }
-            }
+    // once data is loaded, launch showPosts function
+    Promise.all([promisePosts, promiseComments]).then(function(data) {
+        // console.log(data);
+        showPosts(data[0], data[1]); // index 0 for posts & index 1 for comments
+    });
 
-            // when user clicks on 'load more' button show hidden comments
-            postBtn[i].addEventListener('click', function(event){
-                // set btnIsClicked to true (button was clicked for the first time)
-                let btnIsClicked = true;
-                // select all hidden comments in given post
-                let temp_hidden = document.getElementById("post-" + (i+1)).getElementsByClassName('hidden');
-                // select 'load more' button in given post
-                let temp_btn = document.getElementById("post-" + (i+1)).querySelector('.post-btn');
+    // create class 'Posts' from which we will instantiate posts with their respective comments
+    class Posts {
+        constructor(title, content, id, comments, container) {
+            this.title = title;
+            this.content = content;
+            this.id = id; // gives an id to each appended post (article)
+            this.comments = getRandomElements(comments.length, comments); 
+            this.container = container; // container element inside of which either posts or comments are appended
+            this.shownComment = 3; // max number of comments to be displayed
+            this.appendPost(); // once object is constructed, launch appendPost method
+        }
+        // method to append a block of pre-written HTML code into the DOM in the form of post cards
+        appendPost(){
+            let that = this; // to avoid scope issues
+            let html = ''; // will contain a string representing an HTML block
 
-                // let element = event.target;
-                // console.log("btn " + element.parentNode.getAttribute("id") + " was clicked");
+            // HTML structure of each post:
+            html += "<article id=post"+ this.id +">"+
+                        "<h2 class='post-title'>"+ this.title +"</h2>"+
+                        "<div class='post-content'>"+ this.content +"</div>"+
+                        "<div class='post-comment-container'><i class='fas fa-comments'></i> Comments (<span></span>)"; // div is closed later
 
-                // display each of these hidden comments in given post
-                for(let hiddenCounter = 0; hiddenCounter < temp_hidden.length; hiddenCounter++){
-                    if (temp_hidden[hiddenCounter].style.display == 'none') {
-                    // if (temp_hidden[hiddenCounter].style.opacity == 0) {
-                        // show hidden comments
-                        temp_hidden[hiddenCounter].style.display = 'block';
-                        // article[i].style.height = article[i].querySelector('.post-title').scrollHeight+article[i].querySelector('.post-content').scrollHeight+article[i].getElementsByClassName('show')[0].scrollHeight+article[i].getElementsByClassName('show')[1].scrollHeight+article[i].getElementsByClassName('show')[2].scrollHeight+article[i].getElementsByClassName('hidden')[hiddenCounter].scrollHeight+article[i].getElementsByClassName('hidden')[hiddenCounter+1].scrollHeight+article[i].querySelector('.post-btn').scrollHeight+"px";
-                        // change content of btn to 'hide last comments'
-                        temp_btn.querySelector('div').textContent = 'Hide last comments';
-                    } else if (temp_hidden[hiddenCounter].style.display = 'block') {
-                    // } else if (temp_hidden[hiddenCounter].style.opacity = 1) {
-                        // hide hidden comments
-                        temp_hidden[hiddenCounter].style.display = 'none';
-                        // article[i].style.height = article[i].querySelector('.post-title').scrollHeight+article[i].querySelector('.post-content').scrollHeight+article[i].getElementsByClassName('show')[0].scrollHeight+article[i].getElementsByClassName('show')[1].scrollHeight+article[i].getElementsByClassName('show')[2].scrollHeight+"px";
-                        // change content of btn to 'hide last comments'
-                        temp_btn.querySelector('div').textContent = 'Load more';
-                    }
+            // iterate through each comment and select 3 of them to be displayed as shown comments
+            this.comments.forEach(function(comment, index) {
+                // select first 3 comments of the array of shuffled comments per post
+                if (index < that.shownComment) {
+                    html += "<div class='post-comment-group shown'>"+
+                                "<div class='post-comment-name'><a href='mailto:"+ comment.email +"'>"+ comment.name +"</a></div>"+
+                                "<div class='post-comment-body'>"+ comment.body +"</div>"+
+                                "<hr>"+
+                            "</div>";
                 }
             });
 
-            // when user clicks on 'hide comments' button hide hidden comments
-            // postBtn[i].addEventListener('click', showHiddenComments);
+            // closing the post HTML structure
+            html +=     "</div><div class='post-btn'><div>Load more</div></div>"+ // we close here the div of '.post-comment-container'
+                    "</article>";
 
-            // empty temp_comments to store the 5 comments of the following post
-            temp_comments = [];
+            // we save the entire HTML block in the html property
+            this.html = html;
+        }
+
+        // method to load and append the additional hidden comments that weren't initially displayed
+        loadMore() {
+            let that = this; // to avoid scope issues
+            let html = ''; // will contain a string representing an HTML block
+
+            // iterate through each comment and select the rest of them (2) to be displayed as hidden comments
+            this.comments.forEach(function(comment, index) {
+                // select last comments (2) of the array of shuffled comments per post
+                if (index >= that.shownComment) {
+                    html += "<div class='post-comment-group hidden''>"+
+                                "<div class='post-comment-name'><a href='mailto:"+ comment.email +"'>"+ comment.name +"</a></div>"+
+                                "<div class='post-comment-body'>"+ comment.body +"</div>"+
+                            "<hr>"+
+                            "</div>";
+                }
+            });
+
+            // append the entire HTML block of hidden comments collected in 'html' to the comments section in the HTML
+            document.querySelector('#post'+ this.id + ' .post-comment-container').innerHTML += html;
         }
     }
-}
+
+    function showPosts (posts, comments) {
+        // select 10 posts from the posts JSON at random
+        let randomPosts = getRandomElements(10, posts);
+        // console.log("The 10 randomly selected posts are ", randomPosts);
+
+        // create empty array that will collect the 10 randomly selected posts in the form of objects
+        let newPostArr = [];
+
+        // store each of the 10 randomly selected post objects to the newPostArr array
+        for(let i = 0; i < randomPosts.length; i++){
+            // create array called 'postComment' which will contain all related comments to each of the 10 randomly selected posts
+            let postComment = comments.filter(function(comment){
+                return comment.postId == randomPosts[i].id; // return all the comments whose 'postId' = the 'id' of the related post
+            });
+            // instantiate new post from Posts object and store it in variable 'newPost' 
+            let newPost = new Posts(randomPosts[i].title, randomPosts[i].body, i+1, postComment, postsContainer);
+            // push this new post object into the previously created array
+            newPostArr.push(newPost);
+            // repeat this for each of the 10 randomly selected posts
+        }
+
+        // loop through each item of the previously created array containing all 10 post objects
+        newPostArr.forEach( function(newPost, index) {
+            // for each of these objects, append their html property (block of HTML) into the container element of all the posts (postsContainer)
+            postsContainer.innerHTML += newPost.html;
+
+            // display number of comments for each post after 'Comments' on page
+            document.getElementsByTagName('span')[index].textContent = newPost.comments.length;
+        });
+
+        // 'Load more' button
+        newPostArr.forEach(function(newPost, index) {
+            // when 'Load more' button is clicked
+            document.getElementById('post'+newPost.id).querySelector('.post-btn').addEventListener('click', function(){
+                // launch loadMore() method stated inside the Posts class
+                newPost.loadMore();
+                // make 'load more' button disappear since there are no more comments to display after that
+                this.style.display = 'none';
+            })
+        });
+
+
+    }
+
+    // -----------------------------------
+    // DOM FUNCTIONS
+    // -----------------------------------
+
+    // function that toggles shadow on header when page is scrolled
+    window.onscroll = function showShadowHeader(){
+        let header = document.querySelector('.header'),
+            postsContainerTop = postsContainer.getBoundingClientRect().top;
+        if (postsContainerTop <= 70) {
+            header.classList.add('header-shadow');
+        } else {
+            header.classList.remove('header-shadow');
+        }
+    }
+})
 
 
 
@@ -238,14 +187,31 @@ function showPosts (objects) {
 // HELPER FUNCTIONS
 // -----------------------------------
 
-// function that gives a random item in a given array
-// function giveRandomItem (arrLength, array) {
-// 	let randomNumber = Math.floor(Math.random()*arrLength);
-// 	return array[randomNumber];
-// }
+// function to make a GET ajax request
+function ajax (url, callback) {
+    let request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+            // Success
+            let data = JSON.parse(request.responseText);
+            callback(data);
+        } else {
+            // Target server reached, but an error is returned
+            callback(request, 'Error');
+        }
+    };
+    request.onerror = function() {
+        // Connection error
+        callback(request, 'Error');
+    };
+    request.send();
+}
 
-// function that gets given number of random posts/comments
-function getRandomElements (qty, jsonArr, finalArr) {
+// function that returns given number of random posts/comments
+function getRandomElements (qty, jsonArr) {
+    // declare empty array that will collect the randomly selected elements
+    let finalArr = [];
     for(let el = 0; el < qty; el++){ // for loop to avoid duplicates
         let randomObj = jsonArr[Math.floor(Math.random()*jsonArr.length)]; // save random post/comment in randomObj variable
         if (finalArr.indexOf(randomObj) == -1) { // if given post/comment isn't in the array
@@ -254,235 +220,5 @@ function getRandomElements (qty, jsonArr, finalArr) {
             el--;
         }
     }
+    return finalArr;
 }
-
-
-// -----------------------------------
-// DOM FUNCTIONS
-// -----------------------------------
-
-// function that toggles shadow on header when page is scrolled
-window.onscroll = function showShadowHeader(){
-    let header = document.querySelector('.header'),
-        postsContainerTop = postsContainer.getBoundingClientRect().top;
-    if (postsContainerTop <= 70) {
-        header.classList.add('header-shadow');
-    } else {
-        header.classList.remove('header-shadow');
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // 1. Show 10 posts from the API in the browser.
-// // 2. For each post show 3 related comments.
-// // 3. Under comments show button "load more" to display last 10 comments.
-
-
-// // -----------------------------------
-// // LOAD POSTS
-// // -----------------------------------
-
-// // DOM variables
-// let postsContainer = document.querySelector('.posts-container');
-
-// // AJAX-related variables
-// let XHR_posts = new XMLHttpRequest(),
-//     XHR_comments = new XMLHttpRequest(),
-//     postsURL = "https://jsonplaceholder.typicode.com/posts",
-//     commentsURL = "https://jsonplaceholder.typicode.com/comments"
-
-// // Arrays used to store posts and comments
-// let randomPosts = []; // array collecting 10 random posts
-// let randomComments = []; // array collecting 3 random comments for each post
-
-// // XHR_posts.onreadystatechange = function(){
-// //  // check if request was finished and actually worked
-// //  if (XHR_posts.readyState == 4 && XHR_posts.status == 200) {
-// //      // console.log(XHR_posts.responseText);
-// //      console.log(JSON.parse(XHR_posts.responseText));
-// //  } else {
-// //      console.log("Error");
-// //  }
-// // };
-
-// XHR_posts.open("GET", postsURL);
-// XHR_posts.responseType = 'json';
-// XHR_posts.send();
-
-// XHR_posts.onload = function() {
-//     let posts = XHR_posts.response;
-//     // console.log(posts);
-//     showPosts(posts);
-// }
-
-// // create class 'Posts' from which we will instantiate posts with their respective comments
-// class Posts {
-//     constructor(title, content, {name = '', email = '', body = ''}) {
-//         this.title = title;
-//         this.content = content;
-//         this.comments = {name, email, body};
-//     }
-//     // method to append a block of pre-written HTML code into the DOM in the form of post cards
-//     appendPost(){
-//         return ("<article>"+
-//                     "<h2 class='post-title'>"+ this.title +"</h2>"+
-//                     "<div class='post-content'>"+ this.content +"</div>"+
-//                     "<div class='post-comment-container'>Comments</div>"+
-//                     "<div class='post-btn'>Load More</div>"+
-//                 "</article>");
-//     }
-//     // method to append a block of pre-written HTML code into the DOM in the form of comments
-//     appendComments(){
-//         return ("<div class='post-comment-name'><a href='mailto:"+ this.comments.email +"'>"+ this.comments.name +"</a></div>"+
-//                 "<div class='post-comment-body'>"+ this.comments.body +"</div>"+
-//                 "<hr>");
-//     }
-// }
-
-// // create class 'Comments' from which we will instantiate comments
-// // class Comments {
-// //     constructor(name, email, body) {
-// //         this.name = name;
-// //         this.email = email;
-// //         this.body = body;
-// //     }
-// //     // method to append a block of pre-written HTML code into the DOM
-// //     append(){
-// //         return ("<div class='post-comment-name'><a href='mailto:"+ this.email +"'>"+ this.name +"</a></div>"+
-// //                 "<div class='post-comment-body'>"+ this.body +"</div>"+
-// //                 "<hr>");
-// //     }
-// // }
-
-// function showPosts (objects) {
-//     // get 10 random posts from given API
-//     // let randomPosts = []; // array collecting 10 random posts
-//     for(let i = 0; i < 10; i++){ // for loop to avoid duplicates
-//         let randomObj = giveRandomItem(100, objects); // save random post in randomObj variable
-//         if (randomPosts.indexOf(randomObj) == -1) { // if given post isn't in the array
-//             randomPosts.push(randomObj);
-//         } else { // if given post is a duplicate of a post already saved in the array
-//             i--;
-//         }
-//     }
-//     console.log(randomPosts);
-// // -------------
-// // WITHOUT OOP
-// // -------------
-
-//     // for(let i = 0; i < randomPosts; i++){
-//     //     // create DOM elements
-//     //     let postCard = document.createElement("article"),
-//     //         postCardTitle = document.createElement("h2"),
-//     //         postCardContent = document.createElement("div"),
-//     //         postCardComments = document.createElement("div"),
-//     //         postCardBtn = document.createElement("div");
-
-//     //     // give DOM elements their respective attributes
-
-
-//     //     postsContainer.appendChild();
-//     //     randomPosts[i].title
-//     // }
-
-// // -------------
-// // WITH OOP
-// // -------------
-//     // create empty variable that will contain a string of HTML code for a single post
-//     let postCard = '';
-//     // append each of the 10 randomly selected posts to the DOM
-//     for(let i = 0; i < randomPosts.length; i++){
-//         // instantiate from Posts class
-//         postCard = new Posts(randomPosts[i].title, randomPosts[i].body, {name: '', email: '', body: ''}).appendPost();
-//         // append to HTML
-//         postsContainer.innerHTML += postCard;
-//     }
-
-// }
-
-
-
-// // -----------------------------------
-// // LOAD COMMENTS
-// // -----------------------------------
-
-// XHR_comments.open("GET", commentsURL);
-// XHR_comments.responseType = 'json';
-// XHR_comments.send();
-
-// XHR_comments.onload = function() {
-//     let comments = XHR_comments.response;
-//     // console.log(posts);
-//     // showComments(comments);
-// }
-
-// function showComments (objects) {
-// // -------------
-// // WITH OOP
-// // -------------
-//     // get 3 random comments from given API
-//     let randomComments = []; // array collecting 3 random comments
-//     for(let i = 0; i < 3; i++){ // for loop to avoid duplicates
-//         let randomObj = giveRandomItem(100, objects); // save random comment in randomObj variable
-//         if (randomComments.indexOf(randomObj) == -1) { // if given comment isn't in the array
-//             randomComments.push(randomObj);
-//         } else { // if given comment is a duplicate of a comment already saved in the array
-//             i--;
-//         }
-//     }
-//     console.log(randomComments);
-
-//     // create empty variable that will contain a string of HTML code for a single comment
-//     let shownComments = '';
-//     // append each of the 3 randomly selected comments to the post
-//     for(let i = 0; i < randomComments; i++){
-//         // instantiate from Comments class
-//         shownComments = new Comments(randomComments[i].name, randomComments[i].email, randomComments[i].body).append();
-//         // !!! append to HTML => SELECT CORRESPONDING POST BASED ON ID
-//         if (condition) {
-//             // statement
-//         }
-//         // .innerHTML += shownComments;
-//     }
-// }
-
-
-
-// // -----------------------------------
-// // HELPER FUNCTIONS
-// // -----------------------------------
-
-// // function that gives a random item in a given array
-// function giveRandomItem (arrLength, array) {
-//     let randomNumber = Math.floor(Math.random()*arrLength);
-//     return array[randomNumber];
-// }
