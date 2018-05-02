@@ -1,7 +1,5 @@
 # Jobbot-internship-exercise
 
-# New Document
-
 [Project link](https://superchillb.github.io/Jobbot-internship-exercise/)
 (works best when ad-blocker extention is switched off)
 
