@@ -14,6 +14,7 @@
 // DOM variables
 let postsContainer = document.querySelector('.posts-container'),
     commentsContainer = document.getElementsByClassName('post-comment-container'),
+    article = document.getElementsByTagName('article');
     postBtn = document.getElementsByClassName('post-btn');
 
 // AJAX-related variables
@@ -26,9 +27,6 @@ let XHR_posts = new XMLHttpRequest(),
 let randomPosts = [], // array collecting 10 random posts
     temp_comments = [], // array collecting 50 comments (5 for each of the 10 posts)
     randomComments = []; // array collecting 3 random comments for each post
-
-// Switches
-// let btnIsClicked = false; // to determine whether 'load more' btn was clicked for the first time
 
 // create class 'Posts' from which we will instantiate posts with their respective comments
 class Posts {
@@ -43,8 +41,8 @@ class Posts {
         return ("<article>"+
                     "<h2 class='post-title'>"+ this.title +"</h2>"+
                     "<div class='post-content'>"+ this.content +"</div>"+
-                    "<div class='post-comment-container'>Comments</div>"+
-                    "<div class='post-btn'>Load more</div>"+
+                    "<div class='post-comment-container'><i class='fas fa-comments'></i> Comments (<span></span>)</div>"+
+                    "<div class='post-btn'><div>Load more</div></div>"+
                 "</article>");
     }
     // // method to append a block of pre-written HTML code into the DOM in the form of comments
@@ -73,7 +71,7 @@ class Comments {
     }
     // method to append a block of pre-written HTML code into the DOM (hidden comments)
     appendHiddenComment(){
-        return ("<div class='post-comment-group hidden' style='display:none'>"+
+        return ("<div class='post-comment-group hidden' style='display:none;'>"+ // style='display:none'
                     "<div class='post-comment-name'><a href='mailto:"+ this.email +"'>"+ this.name +"</a></div>"+
                     "<div class='post-comment-body'>"+ this.body +"</div>"+
                 "<hr>"+
@@ -155,6 +153,8 @@ function showPosts (objects) {
                     temp_comments.push(objects[j]);
                 }
             }
+            // display on page number of comments for each post after 'Comments'
+            document.getElementsByTagName('span')[i].textContent = temp_comments.length;
             console.log("The 5 comments for post # " + (i+1) + " are ", temp_comments);          
             // create an empty array that will store 3 random comments related to each of the 10 posts
             let temp_shownComments = [];
@@ -206,15 +206,19 @@ function showPosts (objects) {
                 // display each of these hidden comments in given post
                 for(let hiddenCounter = 0; hiddenCounter < temp_hidden.length; hiddenCounter++){
                     if (temp_hidden[hiddenCounter].style.display == 'none') {
+                    // if (temp_hidden[hiddenCounter].style.opacity == 0) {
                         // show hidden comments
                         temp_hidden[hiddenCounter].style.display = 'block';
+                        // article[i].style.height = article[i].querySelector('.post-title').scrollHeight+article[i].querySelector('.post-content').scrollHeight+article[i].getElementsByClassName('show')[0].scrollHeight+article[i].getElementsByClassName('show')[1].scrollHeight+article[i].getElementsByClassName('show')[2].scrollHeight+article[i].getElementsByClassName('hidden')[hiddenCounter].scrollHeight+article[i].getElementsByClassName('hidden')[hiddenCounter+1].scrollHeight+article[i].querySelector('.post-btn').scrollHeight+"px";
                         // change content of btn to 'hide last comments'
-                        temp_btn.textContent = 'Hide last comments';
+                        temp_btn.querySelector('div').textContent = 'Hide last comments';
                     } else if (temp_hidden[hiddenCounter].style.display = 'block') {
+                    // } else if (temp_hidden[hiddenCounter].style.opacity = 1) {
                         // hide hidden comments
                         temp_hidden[hiddenCounter].style.display = 'none';
+                        // article[i].style.height = article[i].querySelector('.post-title').scrollHeight+article[i].querySelector('.post-content').scrollHeight+article[i].getElementsByClassName('show')[0].scrollHeight+article[i].getElementsByClassName('show')[1].scrollHeight+article[i].getElementsByClassName('show')[2].scrollHeight+"px";
                         // change content of btn to 'hide last comments'
-                        temp_btn.textContent = 'Load more';
+                        temp_btn.querySelector('div').textContent = 'Load more';
                     }
                 }
             });
@@ -252,6 +256,21 @@ function getRandomElements (qty, jsonArr, finalArr) {
     }
 }
 
+
+// -----------------------------------
+// DOM FUNCTIONS
+// -----------------------------------
+
+// function that toggles shadow on header when page is scrolled
+window.onscroll = function showShadowHeader(){
+    let header = document.querySelector('.header'),
+        postsContainerTop = postsContainer.getBoundingClientRect().top;
+    if (postsContainerTop <= 70) {
+        header.classList.add('header-shadow');
+    } else {
+        header.classList.remove('header-shadow');
+    }
+}
 
 
 

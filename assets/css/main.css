@@ -10,14 +10,29 @@ GENERAL LAYOUT
 
 body {
 	margin: 0;
+	background-color: azure;
+	color: darkslategrey;
 }
 
 .container {
-	margin: 0 auto;
-	max-width: 800px;
-	border: 1px solid black;
+	width: 100vw;
 }
 
+.header {
+	position: fixed;
+	height: 5rem;
+	left: 50%;
+	-webkit-transform: translateX(-50%);
+	        transform: translateX(-50%);
+	width: 100%;
+	background-color: azure;
+	top: 0;
+	transition: box-shadow ease 0.5s;
+}
+
+.header-shadow {
+	box-shadow: 0px 3px 30px -30px black;
+}
 
 /*
 -------------------------------------
@@ -27,6 +42,10 @@ TITLE
 
 h1 {
 	text-align: center;
+	font-family: 'Roboto Mono', monospace;
+	text-transform: uppercase;
+	font-weight: 100;
+	letter-spacing: 0.7rem;
 }
 
 
@@ -37,7 +56,58 @@ POSTS
 */
 
 .posts-container {
-	
+	margin: 6rem auto;
+	max-width: 800px;
+	-webkit-column-gap: 1.5em;
+	        column-gap: 1.5em;
+	-webkit-column-count: 2;
+	        column-count: 2;
+	padding-top: 2rem;
+}
+article {
+	/*box-shadow: 0px 3px 30px -20px #505050;*/
+	box-shadow: 0px 3px 15px -10px #505050;
+	padding: 20px 20px 50px 20px;
+	margin-bottom: 1.5rem;
+	border-radius: 20px;
+	box-sizing: border-box;
+	display: inline-block;
+	height: auto;
+	overflow: hidden;
+	transition: all ease 1s; /* toggle */
+}
+.post-title {
+	font-family: 'Roboto Mono', monospace;
+	text-transform: uppercase;
+	font-size: 1.3rem;
+	font-weight: 300;
+	/*font-style: italic;*/
+}
+.post-content {
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+}
+.post-content:first-letter {
+	text-transform: capitalize;
+}
+.post-btn {
+	margin-top: 2rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.post-btn div {
+	font-family: 'Roboto Mono', monospace;
+	font-weight: 300;
+	cursor: pointer;
+	border-radius: 100px;
+	box-shadow: 0px 3px 15px -10px #505050;
+	height: 2.2rem;
+	width: auto;
+	padding: 0 1rem;
+	display: flex;
+	align-items: center;
+	text-transform: uppercase;
 }
 
 
@@ -47,10 +117,35 @@ COMMENTS
 -------------------------------------
 */
 
-.shown {
-	/*display: block;*/
-}
 
-.hidden {
-	/*display: none;*/
+.post-comment-container {
+	margin-top: 2rem;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+}
+.post-comment-container i {
+	margin-right: 0.5rem;
+}
+.post-comment-group {
+	font-size: 0.75rem;
+	margin-left: 1rem;
+	margin-top: 1rem;
+}
+.post-comment-name a {
+	color: cadetblue;
+}
+.post-comment-name:first-letter {
+	text-transform: capitalize;
+}
+.post-comment-body {
+	margin: 0.5rem 0 0.5rem 0.2rem;
+}
+.post-comment-body:first-letter {
+	text-transform: capitalize;
+}
+hr {
+	height: 0.5px;
+	background: #cbcbcb;
+	/*font-size: 0;*/
+	border: 0;
 }
